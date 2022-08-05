@@ -9,7 +9,7 @@ import chaiAsPromised from 'chai-as-promised';
 chai.use(chaiAsPromised);
 
 import * as fs from "fs";
-import {createToken, creatMintIfRequired, mintTo, supplyBalance, vaultBalance} from "./utils";
+import {createToken, creatMintIfRequired, mintTo, supplyBalance, tokenBalance, vaultBalance} from "./utils";
 
 describe("simple-token-swap", () => {
   // Configure the client to use the local cluster.
@@ -68,5 +68,26 @@ describe("simple-token-swap", () => {
 
     expect(await supplyBalance(splProgram, pool.publicKey, program.programId)).to.be.equal(0);
     expect(await vaultBalance(splProgram, pool.publicKey, program.programId)).to.be.equal(0);
+
+    let poolAcc = await program.account.pool.fetch(pool.publicKey);
+    expect(poolAcc.enabled).to.be.false;
+  });
+
+  it("Should supply pool with tokens", async() => {
+    const [supply, _nonce] = await PublicKey.findProgramAddress(
+      [anchor.utils.bytes.utf8.encode("supply"), pool.publicKey.toBuffer()],
+      program.programId
+    );
+    expect(await tokenBalance(splProgram, supply)).to.be.equal(0);
+
+    // Send 1000 tokens
+    await splProgram.methods.transfer(new BN(1000_000_000))
+      .accounts({
+        source: supplyFund.publicKey,
+        destination: supply,
+        authority: provider.wallet.publicKey,
+      }).rpc();
+
+    expect(await tokenBalance(splProgram, supply)).to.be.equal(1000_000_000);
   });
 });
