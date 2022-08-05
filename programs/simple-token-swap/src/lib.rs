@@ -226,7 +226,7 @@ pub struct Buy<'info> {
         has_one = vault,
         has_one = supply
     )]
-    pub pool: Account<'info, Pool>,
+    pub pool: Box<Account<'info, Pool>>,
 
     #[account(
         seeds = [b"signer".as_ref(), pool.key().as_ref()],
@@ -238,29 +238,29 @@ pub struct Buy<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut)]
-    pub user_token_source: Account<'info, TokenAccount>,
+    pub user_token_source: Box<Account<'info, TokenAccount>>,
 
-    pub mint_supply: Account<'info, Mint>,
+    pub mint_supply: Box<Account<'info, Mint>>,
     #[account(
         init_if_needed,
         payer = user,
         associated_token::mint = mint_supply,
         associated_token::authority = user,
     )]
-    pub user_token_dest: Account<'info, TokenAccount>,
+    pub user_token_dest: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         seeds = [b"vault".as_ref(), pool.key().as_ref()],
         bump = pool.vault_bump,
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
         seeds = [b"supply".as_ref(), pool.key().as_ref()],
         bump = pool.supply_bump,
     )]
-    pub supply: Account<'info, TokenAccount>,
+    pub supply: Box<Account<'info, TokenAccount>>,
 
     pub rent: Sysvar<'info, Rent>,
     pub associated_token_program: Program<'info, AssociatedToken>,
